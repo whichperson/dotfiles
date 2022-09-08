@@ -1,24 +1,12 @@
 ;; NOTE: init.el is now generated from Emacs.org.  Please edit that file
 ;;       in Emacs and init.el will be generated automatically!
 
-;; You will most likely need to adjust this font size for your system!
-(defvar efs/default-font-size 180)
-(defvar efs/default-variable-font-size 180)
-
 ;; Make frame transparency overridable
 (defvar efs/frame-transparency '(90 . 90))
 
 ;; The default is 800 kilobytes.  Measured in bytes.
 (setq gc-cons-threshold (* 50 1000 1000))
 
-(defun efs/display-startup-time ()
-  (message "Emacs loaded in %s with %d garbage collections."
-           (format "%.2f seconds"
-                   (float-time
-                     (time-subtract after-init-time before-init-time)))
-           gcs-done))
-
-(add-hook 'emacs-startup-hook #'efs/display-startup-time)
 
 ;; Initialize package sources
 (require 'package)
@@ -47,17 +35,6 @@
   (auto-package-update-maybe)
   (auto-package-update-at-time "09:00"))
 
-;; NOTE: If you want to move everything out of the ~/.emacs.d folder
-;; reliably, set `user-emacs-directory` before loading no-littering!
-;(setq user-emacs-directory "~/.cache/emacs")
-
-(use-package no-littering)
-
-;; no-littering doesn't set this by default so we must place
-;; auto save files in the same path as it uses for sessions
-(setq auto-save-file-name-transforms
-      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
-
 (setq inhibit-startup-message t)
 
 (scroll-bar-mode -1)        ; Disable visible scrollbar
@@ -73,8 +50,6 @@
 ;; Set frame transparency
 (set-frame-parameter (selected-frame) 'alpha efs/frame-transparency)
 (add-to-list 'default-frame-alist `(alpha . ,efs/frame-transparency))
-(set-frame-parameter (selected-frame) 'fullscreen 'maximized)
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 ;; Disable line numbers for some modes
 (dolist (mode '(org-mode-hook
@@ -84,58 +59,18 @@
                 eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
-(set-face-attribute 'default nil :font "Fira Code Retina")
+(set-face-attribute 'default nil :font "Fira Code")
 
 ;; Make ESC quit prompts
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-
-(use-package general
-  :after evil
-  :config
-  (general-create-definer efs/leader-keys
-    :keymaps '(normal insert visual emacs)
-    :prefix "SPC"
-    :global-prefix "C-SPC")
-
-  (efs/leader-keys
-    "t"  '(:ignore t :which-key "toggles")
-    "tt" '(counsel-load-theme :which-key "choose theme")
-    "fde" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))))
-
-(use-package evil
-  :init
-  (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
-  (setq evil-want-C-u-scroll t)
-  (setq evil-want-C-i-jump nil)
-  :config
-  (evil-mode 1)
-  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-
-  ;; Use visual line motions even outside of visual-line-mode buffers
-  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-
-  (evil-set-initial-state 'messages-buffer-mode 'normal)
-  (evil-set-initial-state 'dashboard-mode 'normal))
-
-(use-package evil-collection
-  :after evil
-  :config
-  (evil-collection-init))
 
 (use-package command-log-mode
   :commands command-log-mode)
 
 (use-package doom-themes
-  :init (load-theme 'doom-palenight t))
+  :init (load-theme 'doom-tokyo-night t))
 
 (use-package all-the-icons)
-
-(use-package doom-modeline
-  :init (doom-modeline-mode 1)
-  :custom ((doom-modeline-height 15)))
 
 (use-package which-key
   :defer 0
@@ -205,9 +140,6 @@
   ("k" text-scale-decrease "out")
   ("f" nil "finished" :exit t))
 
-(efs/leader-keys
-  "ts" '(hydra-text-scale/body :which-key "scale text"))
-
 (defun efs/org-font-setup ()
   ;; Replace list hyphen with dot
   (font-lock-add-keywords 'org-mode
@@ -223,7 +155,7 @@
                   (org-level-6 . 1.1)
                   (org-level-7 . 1.1)
                   (org-level-8 . 1.1)))
-    (set-face-attribute (car face) nil :font "Roboto" :weight 'regular :height (cdr face)))
+    (set-face-attribute (car face) nil :font "Roboto Mono" :weight 'regular :height (cdr face)))
 
   ;; Ensure that anything that should be fixed-pitch in Org files appears that way
   (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
@@ -367,11 +299,6 @@
 
   (efs/org-font-setup))
 
-(use-package org-bullets
-  :hook (org-mode . org-bullets-mode)
-  :custom
-  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
-
 (defun efs/org-mode-visual-fill ()
   (setq visual-fill-column-width 100
         visual-fill-column-center-text t)
@@ -488,9 +415,6 @@
 (use-package forge
   :after magit)
 
-(use-package evil-nerd-commenter
-  :bind ("M-/" . evilnc-comment-or-uncomment-lines))
-
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
 
@@ -506,13 +430,6 @@
 (use-package eterm-256color
   :hook (term-mode . eterm-256color-mode))
 
-(use-package vterm
-  :commands vterm
-  :config
-  (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *")  ;; Set this to match your custom shell prompt
-  ;;(setq vterm-shell "zsh")                       ;; Set this to customize the shell to launch
-  (setq vterm-max-scrollback 10000))
-
 (when (eq system-type 'windows-nt)
   (setq explicit-shell-file-name "powershell.exe")
   (setq explicit-powershell.exe-args '()))
@@ -523,11 +440,6 @@
 
   ;; Truncate buffer for performance
   (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-
-  ;; Bind some useful keys for evil-mode
-  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
-  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-  (evil-normalize-keymaps)
 
   (setq eshell-history-size         10000
         eshell-buffer-maximum-lines 10000
@@ -547,46 +459,26 @@
 
   (eshell-git-prompt-use-theme 'powerline))
 
-(use-package dired
-  :ensure nil
-  :commands (dired dired-jump)
-  :bind (("C-x C-j" . dired-jump))
-  :custom ((dired-listing-switches "-agho --group-directories-first"))
-  :config
-  (evil-collection-define-key 'normal 'dired-mode-map
-    "h" 'dired-single-up-directory
-    "l" 'dired-single-buffer))
-
-(use-package dired-single
-  :commands (dired dired-jump))
-
-(use-package all-the-icons-dired
-  :hook (dired-mode . all-the-icons-dired-mode))
-
-(use-package dired-open
-  :commands (dired dired-jump)
-  :config
-  ;; Doesn't work as expected!
-  ;;(add-to-list 'dired-open-functions #'dired-open-xdg t)
-  (setq dired-open-extensions '(("png" . "feh")
-                                ("mkv" . "mpv"))))
-
-(use-package dired-hide-dotfiles
-  :hook (dired-mode . dired-hide-dotfiles-mode)
-  :config
-  (evil-collection-define-key 'normal 'dired-mode-map
-    "H" 'dired-hide-dotfiles-mode))
-
 ;; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))
+
+
+(set-face-attribute 'default nil :font "Roboto Mono")
+(set-frame-font "Roboto Mono" nil t)
+
+
+;; Set the fixed pitch face
+(set-face-attribute 'fixed-pitch nil :font "Roboto Mono")
+
+;; Set the variable pitch face
+(set-face-attribute 'variable-pitch nil :font "Roboto Mono" :weight 'regular)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(dired-hide-dotfiles dired-open all-the-icons-dired dired-single eshell-git-prompt vterm eterm-256color evil-nerd-commenter company-box company pyvenv python-mode typescript-mode dap-mode lsp-ivy lsp-treemacs lsp-ui lsp-mode ivy-prescient no-littering auto-package-update which-key visual-fill-column use-package rainbow-delimiters org-bullets ivy-rich hydra helpful general forge evil-collection doom-themes doom-modeline counsel-projectile command-log-mode all-the-icons)))
+ '(org-export-backends '(ascii html icalendar latex md odt)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
